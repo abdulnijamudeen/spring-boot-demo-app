@@ -1,22 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
-        <Property name="LOG_PATTERN">
-            %d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${hostName} --- [%15.15t] %-40.40c{1.} : %m%n%ex
-        </Property>
+        <Property name="LOG_PATTERN">%d %p %c{1.} [%t] %m%n</Property>
+        <Property name="logFilePath">log/springdemo.log</Property>
     </Properties>
     <Appenders>
-        <Console name="ConsoleAppender" target="SYSTEM_OUT" follow="true">
+       <Console name="LogToConsole" target="SYSTEM_OUT">
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
+        <File name="LogToFile" fileName="${logFilePath}">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </File>
     </Appenders>
     <Loggers>
         <Logger name="com.example.demo" level="debug" additivity="false">
-            <AppenderRef ref="ConsoleAppender" />
+            <AppenderRef ref="LogToConsole" />
+            <AppenderRef ref="LogToFile" />
         </Logger>
+
+        <Logger name="org.springframework" level="debug" additivity="false">
+          <AppenderRef ref="LogToConsole" />
+          <AppenderRef ref="LogToFile" />
+        </Logger>
+
+        <Logger name="org.hibernate" level="debug" additivity="false">
+           <AppenderRef ref="LogToConsole" />
+           <AppenderRef ref="LogToFile" />
+        </Logger>
+
+        <Logger name="org.flywaydb" level="debug" additivity="false">
+           <AppenderRef ref="LogToConsole" />
+           <AppenderRef ref="LogToFile" />
+        </Logger>
+
 
         <Root level="info">
             <AppenderRef ref="ConsoleAppender" />
+            <AppenderRef ref="LogFile" />
         </Root>
     </Loggers>
 </Configuration>
