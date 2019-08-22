@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
-        <Property name="LOG_PATTERN">%d %p %c{1.} [%t] %m%n</Property>
+        <Property name="LOG_PATTERN">[%-5p] | %d{yyyy-MM-dd HH:mm:ss.SSS} | [%t] %c (%F:%L) - %m%n</Property>
         <Property name="logFilePath">log/springdemo.log</Property>
     </Properties>
     <Appenders>
@@ -34,7 +34,7 @@
         </Logger>
 
 
-        <Root level="info">
+        <Root level="trace">
             <AppenderRef ref="ConsoleAppender" />
             <AppenderRef ref="LogFile" />
         </Root>
