@@ -1,0 +1,301 @@
+<html>
+
+<body>
+    <h4>Checkout Console For Pretty Format</h4>
+    <label for="repository">Repository</label>
+    <Textarea id="repository" rows="5" ></Textarea>
+    <br>
+    <label>Service</label>
+    <Textarea id="service" rows="5"></Textarea>
+    <br>
+    <label>Service Impl</label>
+    <Textarea id="serviceImpl" rows="5"></Textarea>
+    <br>
+    <label>Mapper</label>
+    <Textarea id="mapper" rows="5"></Textarea>
+    <br>
+
+
+    <script>
+        var className = prompt("Enter class name");
+        var methodName = className[0].toLowerCase() + className.substring(1);
+
+        var repositoryTemplate = `
+/*
+ *
+ *  Copyright (c) 2019 Makinus Pvt Ltd - All Rights Reserved
+ *
+ *  Unauthorized copying of this file, via any medium is strictly prohibited
+ *  Proprietary and confidential
+ *  Written by Makinus Pvt Ltd
+ *
+ */
+package com.makinus.data.dao;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface ${className}Repository extends JpaRepository<${className}, Long> {
+
+    @Query("select o from ${className} o where o.deleted = 'F'")
+    List<${className}> listAll${className}();
+
+    @Query("select o from ${className} o where o.deleted = 'F' and o.active='T'")
+    List<${className}> listActive${className}();
+
+    Optional<${className}> findById(Long id) throws MakinusException;
+}
+`
+
+        var serviceTemplate = `
+/*
+ *
+ *    Copyright (c) 2019 Makinus Pvt Ltd - All Rights Reserved
+ *
+ *    Unauthorized copying of this file, via any medium is strictly prohibited
+ *    Proprietary and confidential
+ *    Written by Makinus Pvt Ltd
+ *
+ */
+package com.makinus.t4s.data.service;
+
+
+import java.util.List;
+
+public interface ${className}Service {
+
+    ${className} save${className}(final ${className} ${methodName});
+
+    List<${className}> ${methodName}List();
+
+    List<${className}> ${methodName}ActiveList();
+
+    ${className} remove${className}(Long id) throws MakinusException;
+
+    ${className} find${className}(Long id) throws MakinusException;
+
+    ${className} update${className}(final ${className} ${methodName}) throws MakinusException;
+}
+`
+
+        var serviceImplTemplate = `
+/*
+ *
+ *    Copyright (c) 2019 Makinus Pvt Ltd - All Rights Reserved
+ *
+ *    Unauthorized copying of this file, via any medium is strictly prohibited
+ *    Proprietary and confidential
+ *    Written by Makinus Pvt Ltd
+ *
+ */
+package com.makinus.t4s.data.service;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.nio.file.Paths.get;
+
+@Service
+@Transactional
+public class ${className}ServiceImpl implements ${className}Service {
+
+    private final Logger LOG = LogManager.getLogger(${className}ServiceImpl.class);
+
+    private final ${className}Repository ${methodName}Repository;
+
+    private final ImageWriter imageWriter;
+
+    public ${className}ServiceImpl(@Autowired ${className}Repository ${methodName}Repository, ImageWriter imageWriter) {
+        this.${methodName}Repository = ${methodName}Repository;
+        this.imageWriter = imageWriter;
+    }
+
+    @Override
+    public ${className} save${className}(${className} ${methodName}) {
+        LOG.info("Saving ${className} in the database");
+        ${className} saved${className} = ${methodName}Repository.save(${methodName});
+        LOG.info("Saved ${className} in the database");
+        return saved${className};
+    }
+
+    @Override
+    public List<${className}> ${methodName}List() {
+        LOG.info("List ${className} from database");
+        return ${methodName}Repository.listAll${className}();
+    }
+
+    @Override
+    public List<${className}> ${methodName}ActiveList() {
+        LOG.info("List ${className} from database");
+        return ${methodName}Repository.listActive${className}();
+    }
+
+    @Override
+    public ${className} remove${className}(Long id) throws MakinusException {
+        Optional<${className}> ${methodName}Optional = ${methodName}Repository.findById(id);
+        if (${methodName}Optional.isPresent()) {
+            ${className} ${methodName} = ${methodName}Optional.get();
+            ${methodName}.setDeleted(YNStatus.YES.getStatus());
+            ${methodName}.setUpdatedBy(MakinusUtils.getCurrentUser());
+            ${methodName}.setUpdatedDate(MakinusUtils.getInstant());
+            return ${methodName};
+        }
+        throw new MakinusException(format("${className} is not found with the id %s", id));
+    }
+
+    @Override
+    public ${className} find${className}(Long id) throws MakinusException {
+        Optional<${className}> ${methodName}Optional = ${methodName}Repository.findById(id);
+        if (${methodName}Optional.isPresent()) {
+            ${className} ${methodName} = ${methodName}Optional.get();
+            ${methodName}.setImage(imageWriter.readImage(get(${methodName}.getImagePath())));
+            return ${methodName};
+        }
+        throw new MakinusException(format("${className} is not found with the id %d", id));
+    }
+
+
+    @Override
+    public ${className} update${className}(${className} ${methodName}) throws MakinusException {
+        LOG.info("Update existing ${className} in the database");
+        return ${methodName}Repository.save(${methodName});
+    }
+
+}
+`
+
+var mapperTemplate = `
+/*
+ *
+ *    Copyright (c) 2019 Makinus Pvt Ltd - All Rights Reserved
+ *
+ *    Unauthorized copying of this file, via any medium is strictly prohibited
+ *    Proprietary and confidential
+ *    Written by Makinus Pvt Ltd
+ *
+ */
+package com.makinus.t4s.data.mapping;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.time.LocalDate;
+
+
+@Component
+@Qualifier("${className}Mapper")
+public class ${className}Mapper implements EntityMapper<${className}Form, ${className}>, EntityRemapper<${className}, ${className}Form>, EntityUpdateMapper<${className}Form, ${className}> {
+
+    private final Logger LOG = LogManager.getLogger(${className}Mapper.class);
+
+    @Autowired
+    private ImageWriter imageWriter;
+
+    @Override
+    public ${className} map(${className}Form ${methodName}Form) throws MakinusException {
+        LOG.info("Map ${className} Form to ${className} Entity");
+        ${className} ${methodName} = new ${className}();
+        try {
+            ${methodName}.setImageName(${methodName}Form.getImageName());
+            ${methodName}.setDescription(${methodName}Form.getDescription());
+            ${methodName}.setOriginalFileName(${methodName}Form.get${className}Image().getOriginalFilename());
+            ${methodName}.setImage(${methodName}Form.get${className}Image().getBytes());
+            ${methodName}.setCreatedDateAsFolderName(localDateStringAsDDMMYYYY(LocalDate.now()).replaceAll("/", ""));
+            ${methodName}.setImagePath(imagePath(${methodName}));
+            ${methodName}.setImageCategory(${methodName}Form.getImageCategory());
+            ${methodName}.setActive(${methodName}Form.isActive${className}() ? YNStatus.YES.getStatus() : YNStatus.NO.getStatus());
+            ${methodName}.setCreatedBy(MakinusUtils.getCurrentUser());
+            ${methodName}.setCreatedDate(getInstant());
+            ${methodName}.setUpdatedBy(MakinusUtils.getCurrentUser());
+            ${methodName}.setUpdatedDate(getInstant());
+            ${methodName}.setDeleted(YNStatus.NO.getStatus());
+        } catch (IOException e) {
+            LOG.warn("${className}Mapper.map throws exception {}", e.getMessage());
+            throw new MakinusException(e.getMessage());
+        }
+        return ${methodName};
+    }
+
+    private String imagePath(${className} ${methodName}) throws MakinusException {
+        return imageWriter.writeImage(${methodName}.getImage(), ${methodName}.getCreatedDateAsFolderName(), ${methodName}.getOriginalFileName());
+    }
+
+    @Override
+    public ${className}Form remap(${className} ${methodName}) throws MakinusException {
+        LOG.info("Map ${className} Entity to ${className} Form");
+        ${className}Form ${methodName}Form = new ${className}Form();
+        ${methodName}Form.set${className}ID(String.valueOf(${methodName}.getId()));
+        ${methodName}Form.setImageName(${methodName}.getImageName());
+        ${methodName}Form.setDescription(${methodName}.getDescription());
+        ${methodName}Form.setImageCategory(${methodName}.getImageCategory());
+        ${methodName}Form.setActive${className}(${methodName}.getActive() .equalsIgnoreCase(YNStatus.YES.getStatus()));
+        return ${methodName}Form;
+    }
+
+    @Override
+    public ${className} map(${className}Form ${methodName}Form, ${className} ${methodName}) throws MakinusException {
+        LOG.info("Map ${className} Form to Updated ${className} Entity");
+        try {
+            ${methodName}.setImageName(${methodName}Form.getImageName());
+            ${methodName}.setDescription(${methodName}Form.getDescription());
+            if (${methodName}Form.getEdit${className}Image() != null && !${methodName}Form.getEdit${className}Image().isEmpty()) {
+                //Just to ensure old image is preserved while editing
+                ${methodName}.setOriginalFileName(${methodName}Form.getEdit${className}Image().getOriginalFilename());
+                ${methodName}.setImage(${methodName}Form.getEdit${className}Image().getBytes());
+                ${methodName}.setCreatedDateAsFolderName(localDateStringAsDDMMYYYY(LocalDate.now()).replaceAll("/", ""));
+                ${methodName}.setImagePath(imagePath(${methodName}));
+            }
+            ${methodName}.setImageCategory(${methodName}Form.getImageCategory());
+            ${methodName}.setActive(${methodName}Form.isActive${className}() ? YNStatus.YES.getStatus() : YNStatus.NO.getStatus());
+            ${methodName}.setUpdatedBy(MakinusUtils.getCurrentUser());
+            ${methodName}.setUpdatedDate(MakinusUtils.getInstant());
+        } catch (IOException e) {
+            LOG.warn("${className} Mapper.map throws exception {}", e.getMessage());
+            throw new MakinusException(e.getMessage());
+        }
+        return ${methodName};
+    }
+}
+`
+
+var ob = {
+    repositoryTemplate,
+    serviceTemplate,
+    serviceImplTemplate,
+    mapperTemplate
+}
+
+        console.log(repositoryTemplate);
+        console.log(serviceTemplate);
+        console.log(serviceImplTemplate);
+        console.log(mapperTemplate);
+
+
+        var repo = document.getElementById("repository");
+        var serv = document.getElementById("service");
+        var servImpl = document.getElementById("serviceImpl");
+        var mapper = document.getElementById("mapper");
+
+        repo.innerText = repositoryTemplate;
+        serv.innerText = serviceTemplate;
+        servImpl.innerText = serviceImplTemplate;
+        mapper.innerText = mapperTemplate;
+
+    </script>
+</body>
+
+</html>
