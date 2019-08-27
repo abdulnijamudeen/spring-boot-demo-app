@@ -1,0 +1,26 @@
+https://www.service-architecture.com/articles/database/mapping_sql_and_java_data_types.html
+
+Mapping SQL and Java Data Types
+The following table shows the mapping between SQL and Java data types. They are from JDBC.
+
+SQL data type	Java data type
+Simply mappable	Object mappable
+CHARACTER	 	String
+VARCHAR	 	String
+LONGVARCHAR	 	String
+NUMERIC	 	java.math.BigDecimal
+DECIMAL	 	java.math.BigDecimal
+BIT	boolean	Boolean
+TINYINT	byte	Integer
+SMALLINT	short	Integer
+INTEGER	int	Integer
+BIGINT	long	Long
+REAL	float	Float
+FLOAT	double	Double
+DOUBLE PRECISION	double	Double
+BINARY	 	byte[]
+VARBINARY	 	byte[]
+LONGVARBINARY	 	byte[]
+DATE	 	java.sql.Date
+TIME	 	java.sql.Time
+TIMESTAMP	 	java.sql.Timestamp
