@@ -21,16 +21,8 @@
         var methodName = className[0].toLowerCase() + className.substring(1);
 
         var repositoryTemplate = `
-/*
- *
- *  Copyright (c) 2019 Makinus Pvt Ltd - All Rights Reserved
- *
- *  Unauthorized copying of this file, via any medium is strictly prohibited
- *  Proprietary and confidential
- *  Written by Makinus Pvt Ltd
- *
- */
-package com.makinus.data.dao;
+
+package com.bootspring.data.dao;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -46,21 +38,13 @@ public interface ${className}Repository extends JpaRepository<${className}, Long
     @Query("select o from ${className} o where o.deleted = 'F' and o.active='T'")
     List<${className}> listActive${className}();
 
-    Optional<${className}> findById(Long id) throws MakinusException;
+    Optional<${className}> findById(Long id) throws Exception;
 }
 `
 
         var serviceTemplate = `
-/*
- *
- *    Copyright (c) 2019 Makinus Pvt Ltd - All Rights Reserved
- *
- *    Unauthorized copying of this file, via any medium is strictly prohibited
- *    Proprietary and confidential
- *    Written by Makinus Pvt Ltd
- *
- */
-package com.makinus.t4s.data.service;
+
+package com.bootspring.t4s.data.service;
 
 
 import java.util.List;
@@ -73,25 +57,17 @@ public interface ${className}Service {
 
     List<${className}> ${methodName}ActiveList();
 
-    ${className} remove${className}(Long id) throws MakinusException;
+    ${className} remove${className}(Long id) throws Exception;
 
-    ${className} find${className}(Long id) throws MakinusException;
+    ${className} find${className}(Long id) throws Exception;
 
-    ${className} update${className}(final ${className} ${methodName}) throws MakinusException;
+    ${className} update${className}(final ${className} ${methodName}) throws Exception;
 }
 `
 
         var serviceImplTemplate = `
-/*
- *
- *    Copyright (c) 2019 Makinus Pvt Ltd - All Rights Reserved
- *
- *    Unauthorized copying of this file, via any medium is strictly prohibited
- *    Proprietary and confidential
- *    Written by Makinus Pvt Ltd
- *
- */
-package com.makinus.t4s.data.service;
+
+package com.bootspring.t4s.data.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -141,32 +117,32 @@ public class ${className}ServiceImpl implements ${className}Service {
     }
 
     @Override
-    public ${className} remove${className}(Long id) throws MakinusException {
+    public ${className} remove${className}(Long id) throws Exception {
         Optional<${className}> ${methodName}Optional = ${methodName}Repository.findById(id);
         if (${methodName}Optional.isPresent()) {
             ${className} ${methodName} = ${methodName}Optional.get();
             ${methodName}.setDeleted(YNStatus.YES.getStatus());
-            ${methodName}.setUpdatedBy(MakinusUtils.getCurrentUser());
-            ${methodName}.setUpdatedDate(MakinusUtils.getInstant());
+            ${methodName}.setUpdatedBy(Utils.getCurrentUser());
+            ${methodName}.setUpdatedDate(Utils.getInstant());
             return ${methodName};
         }
-        throw new MakinusException(format("${className} is not found with the id %s", id));
+        throw new Exception(format("${className} is not found with the id %s", id));
     }
 
     @Override
-    public ${className} find${className}(Long id) throws MakinusException {
+    public ${className} find${className}(Long id) throws Exception {
         Optional<${className}> ${methodName}Optional = ${methodName}Repository.findById(id);
         if (${methodName}Optional.isPresent()) {
             ${className} ${methodName} = ${methodName}Optional.get();
             ${methodName}.setImage(imageWriter.readImage(get(${methodName}.getImagePath())));
             return ${methodName};
         }
-        throw new MakinusException(format("${className} is not found with the id %d", id));
+        throw new Exception(format("${className} is not found with the id %d", id));
     }
 
 
     @Override
-    public ${className} update${className}(${className} ${methodName}) throws MakinusException {
+    public ${className} update${className}(${className} ${methodName}) throws Exception {
         LOG.info("Update existing ${className} in the database");
         return ${methodName}Repository.save(${methodName});
     }
@@ -175,16 +151,8 @@ public class ${className}ServiceImpl implements ${className}Service {
 `
 
 var mapperTemplate = `
-/*
- *
- *    Copyright (c) 2019 Makinus Pvt Ltd - All Rights Reserved
- *
- *    Unauthorized copying of this file, via any medium is strictly prohibited
- *    Proprietary and confidential
- *    Written by Makinus Pvt Ltd
- *
- */
-package com.makinus.t4s.data.mapping;
+
+package com.bootspring.t4s.data.mapping;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -206,7 +174,7 @@ public class ${className}Mapper implements EntityMapper<${className}Form, ${clas
     private ImageWriter imageWriter;
 
     @Override
-    public ${className} map(${className}Form ${methodName}Form) throws MakinusException {
+    public ${className} map(${className}Form ${methodName}Form) throws Exception {
         LOG.info("Map ${className} Form to ${className} Entity");
         ${className} ${methodName} = new ${className}();
         try {
@@ -218,24 +186,24 @@ public class ${className}Mapper implements EntityMapper<${className}Form, ${clas
             ${methodName}.setImagePath(imagePath(${methodName}));
             ${methodName}.setImageCategory(${methodName}Form.getImageCategory());
             ${methodName}.setActive(${methodName}Form.isActive${className}() ? YNStatus.YES.getStatus() : YNStatus.NO.getStatus());
-            ${methodName}.setCreatedBy(MakinusUtils.getCurrentUser());
+            ${methodName}.setCreatedBy(Utils.getCurrentUser());
             ${methodName}.setCreatedDate(getInstant());
-            ${methodName}.setUpdatedBy(MakinusUtils.getCurrentUser());
+            ${methodName}.setUpdatedBy(Utils.getCurrentUser());
             ${methodName}.setUpdatedDate(getInstant());
             ${methodName}.setDeleted(YNStatus.NO.getStatus());
         } catch (IOException e) {
             LOG.warn("${className}Mapper.map throws exception {}", e.getMessage());
-            throw new MakinusException(e.getMessage());
+            throw new Exception(e.getMessage());
         }
         return ${methodName};
     }
 
-    private String imagePath(${className} ${methodName}) throws MakinusException {
+    private String imagePath(${className} ${methodName}) throws Exception {
         return imageWriter.writeImage(${methodName}.getImage(), ${methodName}.getCreatedDateAsFolderName(), ${methodName}.getOriginalFileName());
     }
 
     @Override
-    public ${className}Form remap(${className} ${methodName}) throws MakinusException {
+    public ${className}Form remap(${className} ${methodName}) throws Exception {
         LOG.info("Map ${className} Entity to ${className} Form");
         ${className}Form ${methodName}Form = new ${className}Form();
         ${methodName}Form.set${className}ID(String.valueOf(${methodName}.getId()));
@@ -247,7 +215,7 @@ public class ${className}Mapper implements EntityMapper<${className}Form, ${clas
     }
 
     @Override
-    public ${className} map(${className}Form ${methodName}Form, ${className} ${methodName}) throws MakinusException {
+    public ${className} map(${className}Form ${methodName}Form, ${className} ${methodName}) throws Exception {
         LOG.info("Map ${className} Form to Updated ${className} Entity");
         try {
             ${methodName}.setImageName(${methodName}Form.getImageName());
@@ -261,11 +229,11 @@ public class ${className}Mapper implements EntityMapper<${className}Form, ${clas
             }
             ${methodName}.setImageCategory(${methodName}Form.getImageCategory());
             ${methodName}.setActive(${methodName}Form.isActive${className}() ? YNStatus.YES.getStatus() : YNStatus.NO.getStatus());
-            ${methodName}.setUpdatedBy(MakinusUtils.getCurrentUser());
-            ${methodName}.setUpdatedDate(MakinusUtils.getInstant());
+            ${methodName}.setUpdatedBy(Utils.getCurrentUser());
+            ${methodName}.setUpdatedDate(Utils.getInstant());
         } catch (IOException e) {
             LOG.warn("${className} Mapper.map throws exception {}", e.getMessage());
-            throw new MakinusException(e.getMessage());
+            throw new Exception(e.getMessage());
         }
         return ${methodName};
     }
